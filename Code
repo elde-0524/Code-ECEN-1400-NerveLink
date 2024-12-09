@@ -1,0 +1,287 @@
+//calls the library for the temperature sensor
+#include <Adafruit_MLX90614.h>
+
+Adafruit_MLX90614 mlx = Adafruit_MLX90614();
+
+const int pressurePin1 = A0;
+const int pressurePin2 = A1; 
+const int pressurePin3 = A2; 
+const int pressurePin4 = A3; 
+const int pressurePin5 = A6; 
+const int pressurePin6 = A7; 
+const int buzzerPin = 6; 
+
+//LED Pins 
+const int bluePin = 11;
+const int greenPin = 10; 
+const int redPin = 9; 
+float force;
+float force1;
+float force2;
+float force3;
+
+
+void setup() {
+  // put your setup code here, to run once:
+ pinMode(pressurePin1, INPUT);
+ pinMode(pressurePin2, INPUT);
+ pinMode(pressurePin3, INPUT);
+ pinMode(pressurePin4, INPUT);
+ pinMode(pressurePin5, INPUT);
+ pinMode(pressurePin6, INPUT);
+ 
+ pinMode(buzzerPin, OUTPUT); 
+ pinMode(bluePin, OUTPUT);
+ pinMode(redPin, OUTPUT); 
+ pinMode(greenPin, OUTPUT); 
+ 
+ Serial.begin(9600); 
+ while (!Serial);
+ 
+ if (!mlx.begin()) {
+    Serial.println("Error connecting to MLX"); 
+ }
+}
+
+
+
+void loop() {
+  // variable that read the ambient and object temperature
+  float ambientTempF = mlx.readAmbientTempF(); 
+  float objectTempF = mlx.readObjectTempF(); 
+   
+  int sensorValue1 = analogRead(pressurePin1);
+  int sensorValue2 = analogRead(pressurePin2);
+  int sensorValue3 = analogRead(pressurePin3);
+  int sensorValue4 = analogRead(pressurePin4);
+  int sensorValue5 = analogRead(pressurePin5);
+  int sensorValue6 = analogRead(pressurePin6);
+
+  // Maps the voltage of the fsr to the millie volts
+  int fsrVoltage1 = map(sensorValue1,0,1023,0,5000);
+  int fsrVoltage2 = map(sensorValue2,0,1023,0,5000);
+  int fsrVoltage3 = map(sensorValue3,0,1023,0,5000);
+  int fsrVoltage4 = map(sensorValue4,0,1023,0,5000);
+  int fsrVoltage5 = map(sensorValue5,0,1023,0,5000);
+  int fsrVoltage6 = map(sensorValue6,0,1023,0,5000);
+
+  //prints the voltage in millie volts 
+  //Serial.print("FSR voltage = "); 
+  //Serial.println(fsrVoltage);
+
+  
+  // prints the temperatures of the object and the ambient temp  
+  
+  Serial.print("Object Temp in F:"); 
+  Serial.print(objectTempF); 
+  Serial.println(" "); 
+  Serial.print("ambient Temp in F:"); 
+  Serial.println(ambientTempF);  
+  
+
+  //changes the lights based on the temperature of the object
+  if (objectTempF < 50.0) {
+    digitalWrite(redPin, LOW); 
+    digitalWrite(greenPin, LOW); 
+    digitalWrite(bluePin, HIGH); 
+  }
+
+  else if (objectTempF < 93 && objectTempF >50) {
+    digitalWrite(redPin, LOW); 
+    digitalWrite(greenPin, HIGH); 
+    digitalWrite(bluePin, LOW); 
+  }
+
+  else if (objectTempF > 93) {
+    digitalWrite(redPin, HIGH); 
+    digitalWrite(greenPin, LOW); 
+    digitalWrite(bluePin, LOW);
+  }
+  
+  // equation for ohms to weight 1138.2x^-0.629
+  // equation for resistance of fsr (RFSR) R_FSR = (V_out* R)/ (V_cc - V_out) 
+
+  //check sensor 1 
+    if (fsrVoltage1 == 0) {
+      Serial.println("No pressure on 1");
+      Serial.print(fsrVoltage1);   
+    } 
+    else {
+      calculateFSRFor1075(fsrVoltage1, "1" ); 
+    }
+    //check sensor 2 
+    if (fsrVoltage2 == 0) {
+      Serial.println("No pressure on 2 ");  
+    } 
+    else {
+      calculateFSRFor404(fsrVoltage2, "2" ); 
+    }
+    //check sensor 3 
+    if (fsrVoltage3 == 0) {
+      Serial.println("No pressure on 3");  
+    } 
+    else {
+      calculateFSRFor403(fsrVoltage3, "3" ); 
+    } 
+    //check sensor 4 
+    if (fsrVoltage4 == 0) {
+      Serial.println("No pressure on 4");  
+    } 
+    else {
+      calculateFSRFor402(fsrVoltage4, "4" ); 
+    }
+    //check sensor 5 
+    if (fsrVoltage5 == 0) {
+      Serial.println("No pressure on 5 ");  
+    } 
+    else {
+      calculateFSRFor402(fsrVoltage5, "5"); 
+      //Serial.println(fsrVoltage5); 
+    }
+    //check sensor 6
+    if (fsrVoltage6 == 0) {
+      //Serial.println(fsrVoltage6);
+      Serial.println("No pressure on 6 ");    
+    } 
+    else {
+      calculateFSRFor402(fsrVoltage6, "6" ); 
+      Serial.println(fsrVoltage6);
+    }
+   Serial.println("---------------------------------------"); 
+   delay(250); 
+  
+  //Checks the analogreat of A0 and if its above 75 it emits sound
+   if (force > 10){
+      tone(buzzerPin, 500);
+      Serial.println("Buzzer on");
+      delay(1000);
+    } 
+    else {
+      noTone(buzzerPin);
+    }
+  
+  Serial.print("This is the force: ");
+  Serial.println(force);
+
+   if (force1 > 20){
+      tone(buzzerPin, 500);
+      Serial.println("Buzzer on");
+      delay(1000);
+    } 
+    else {
+      noTone(buzzerPin);
+    }
+  
+  Serial.print("This is the force1: ");
+  Serial.println(force);
+
+    if (force2 > 20){
+      tone(buzzerPin, 500);
+      Serial.println("Buzzer on");
+      delay(1000);
+    } 
+    else {
+      noTone(buzzerPin);
+    }
+  
+  Serial.print("This is the force2: ");
+  Serial.println(force2);
+   if (force3 > 20){
+      tone(buzzerPin, 500);
+      Serial.println("Buzzer on");
+      delay(1000);
+    } 
+    else {
+      noTone(buzzerPin);
+    }
+  
+  Serial.print("This is the force2: ");
+  Serial.println(force3);
+}
+void calculateFSRFor1075(float fsrVoltage, String senseNumber ){ 
+       // The voltage = Vcc * R / (R + FSR) where R = 10K and Vcc = 5V
+   // so FSR = ((Vcc - V) * R) / V  
+        
+   long fsrResistance = 5000 - fsrVoltage;     // fsr is in millivolts 
+   fsrResistance *= 10000;                       // 10K resistor stepdown resistor
+   fsrResistance /= fsrVoltage;
+
+    // Serial.print("Resistance of fsr = ");
+   // Serial.println(fsrResistance);
+
+   // Exponential decay function of resistance vs. weight 
+   float weight = pow(1138.2 / fsrResistance, 1.0 / 0.629);
+
+   Serial.print("Weight in kg " + senseNumber  + " = " );
+   Serial.println(weight);
+
+   force1 = weight * 9.81;
+   Serial.print("Force of sensor " + senseNumber +" = "  );
+   Serial.println(force);
+   return(force1);
+   
+  }
+void calculateFSRFor402(float fsrVoltage, String senseNumber) {
+   long fsrResistance = 5000 - fsrVoltage;     // fsr is in millivolts 
+   fsrResistance *= 10000;                       // 10K resistor stepdown resistor
+   fsrResistance /= fsrVoltage;
+
+    // Serial.print("Resistance of fsr = ");
+   // Serial.println(fsrResistance);
+
+   // Exponential decay function of resistance vs. weight 
+   float weight = 469254 * pow((fsrResistance), -0.837);
+   //convert to kg 
+   weight /= 1000;
+   weight - 0.3;
+   Serial.print("Weight in kg " + senseNumber  + " = " );
+   Serial.println(weight);
+
+   force= weight * 9.81;
+   Serial.print("Force of sensor " + senseNumber +" = "  );
+   Serial.println(force);
+  return(force);
+  
+}
+void calculateFSRFor403(float fsrVoltage, String senseNumber) {
+   long fsrResistance = 5000 - fsrVoltage;     // fsr is in millivolts 
+   fsrResistance *= 10000;                       // 10K resistor stepdown resistor
+   fsrResistance /= fsrVoltage;
+
+    // Serial.print("Resistance of fsr = ");
+   // Serial.println(fsrResistance);
+
+   // Exponential decay function of resistance vs. weight 
+   float weight = 469254 * pow((fsrResistance), -0.837);
+   //convert to kg 
+   weight /= 1000;
+   weight - 0.3;
+   Serial.print("Weight in kg " + senseNumber  + " = " );
+   Serial.println(weight);
+
+   force2 = weight * 9.81;
+   Serial.print("Force of sensor " + senseNumber +" = "  );
+   Serial.println(force);
+  return(force2);
+}
+void calculateFSRFor404(float fsrVoltage, String senseNumber) {
+   long fsrResistance = 5000 - fsrVoltage;     // fsr is in millivolts 
+   fsrResistance *= 10000;                       // 10K resistor stepdown resistor
+   fsrResistance /= fsrVoltage;
+
+    // Serial.print("Resistance of fsr = ");
+   // Serial.println(fsrResistance);
+
+   // Exponential decay function of resistance vs. weight 
+   float weight = 469254 * pow((fsrResistance), -0.837);
+   //convert to kg 
+   weight /= 1000;
+   weight - 0.3;
+   Serial.print("Weight in kg " + senseNumber  + " = " );
+   Serial.println(weight);
+
+   force2 = weight * 9.81;
+   Serial.print("Force of sensor " + senseNumber +" = "  );
+   Serial.println(force);
+  return(force3);
+}
